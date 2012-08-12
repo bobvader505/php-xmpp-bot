@@ -160,6 +160,8 @@ class Client
             
           case 'session_start':
             $this->ready = true;
+            $this->xmpp->presence();
+            sleep(1);
             
           // no default
         }

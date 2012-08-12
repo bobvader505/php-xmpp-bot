@@ -9,7 +9,7 @@ use xbot\xmpp\Message;
 // define your stuff here
 $nick = '~rrbot';
 $user = 'quote2';
-$pass = file_get_contents(__DIR__ . '/pass');
+$pass = trim(file_get_contents(__DIR__ . '/pass'));
 $auth = 'jabber.ccc.de';
 $serv = 'jabber.ccc.de:5222';
       
