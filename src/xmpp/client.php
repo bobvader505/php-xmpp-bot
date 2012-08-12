@@ -22,7 +22,7 @@ class Client
         LOGLEVEL_VERBOSE = 4;
   
   // XMPPHP_XMPP instance
-  protected $xmpp;
+  protected $xmpp, $info;
   
   // action-trigger
   protected $trigger = [ 'muc' => '', 'prv' => '' ];
@@ -87,6 +87,7 @@ class Client
         $this->trigger = $trg + $this->trigger;
       
     $this->nick = $info['nick'];
+    $this->info = $info;
   }
   
   /**
@@ -107,9 +108,28 @@ class Client
     }
   }
   
+  /**
+   * sets auto-handled triggers
+   * 
+   * @param  array  $trigger
+   * @return Client
+   */
   public function handle(array $trigger)
   {
     $this->handle = $trigger;
+    return $this;
+  }
+  
+  /**
+   * disconnects the bot
+   * 
+   * @return Client
+   */
+  public function quit($msg = null)
+  {
+    // TODO: send offline message
+    
+    $this->xmpp->disconnect();
     return $this;
   }
   
@@ -369,6 +389,18 @@ class Client
     return $this->on('session_start', $fnc);
   }
   
+  public function kick($muc, $nick, $msg)
+  {
+    if (!isset($this->mucs[$muc]) || $this->mucs[$muc]['role'] !== 'moderator')
+      return;
+    
+    $req = '<iq from="' . $this->info['user'] . '@' . $this->info['auth'] . '/' . $this->nick . '" ';
+    $req .= 'id=kick1" type="set" to="' . $muc . '"><query xmlns="http://jabber.org/protocol/muc#admin">';
+    $req .= '<item nick="' . $nick . '" role="none"><reason>' . $msg . '</reason></item></query></iq>';
+    
+    $this->xmpp->send($req);
+  }
+  
   /**
    * leaves a muc
    * 
@@ -377,7 +409,7 @@ class Client
    */
   public function leave($muc, $nick = null)
   {
-    if (isset($this->mucs[$muc]))
+    if (!isset($this->mucs[$muc]))
       return $this;
     
     $nick = $nick ?: $this->nick;

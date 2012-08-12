@@ -134,12 +134,63 @@ class Command
    */
   public function execute()
   {
+    // check if command is an admin-command
+    switch ($this->name) {
+      case 'join':
+      case 'leave':
+      case 'quit':
+      case 'kick':
+        $auth = substr($this->from, 0, strrpos($this->from, '/'));
+        
+        if ($auth !== 'murdoc@jabber.ccc.de')
+          return; // not admin
+        
+        switch ($this->name) {
+          case 'kick':
+            if (count($this->args) !== 3)
+              return;
+            
+            list ($room, $nick, $msg) = $this->args;
+            $this->xbot->kick($room, $nick, $msg);
+            break;
+            
+          case 'join':
+            if (count($this->args) === 0)
+              return;
+            
+            $room = $this->args[0];
+            $nick = null;
+            
+            if (isset($this->args[1]))
+              $nick = $this->args[1];
+            
+            $this->xbot->join($room, $nick);
+            break;
+            
+          case 'leave':
+            if (count($this->args) === 0)
+              return;
+            
+            $room = $this->args[0];
+            $nick = null;
+            
+            if (isset($this->args[1]))
+              $nick = $this->args[1];
+            
+            $this->xbot->leave($room, $nick);
+            break;
+            
+          case 'quit':
+            $this->xbot->quit();
+            break;
+        }
+    }
+    
     $exec = $this->name;
     $exec = str_replace('-', '_', $exec);
     $exec = __DIR__ . '/../plugins/' . $exec . '.php';
     
     if (!file_exists($exec)) return false;
-    print "executing $exec\n";
     
     $args = base64_encode(json_encode($this->args));
     $resp = `php -q -f $exec -- "$args"`;

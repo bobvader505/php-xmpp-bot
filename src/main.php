@@ -25,7 +25,7 @@ $xmpp = new Client([
   'auth' => $auth,
   
   // logging
-  'loglevel' => Client::LOGLEVEL_INFO,
+  'loglevel' => Client::LOGLEVEL_VERBOSE,
   'printlog' => true,
   
   // trigger: muc = multi user chat, prv = private messages
