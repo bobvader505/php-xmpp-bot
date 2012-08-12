@@ -229,10 +229,19 @@ class XMPPHP_XMPP extends XMPPHP_XMLStream {
 		} else {
 			$payload['type'] = 'chat';
 		}
-		$payload['from'] = $xml->attrs['from'];
-		$payload['body'] = $xml->sub('body')->data;
+		
+		$from = isset($xml->attrs['from']) ? $xml->attrs['from'] : null;
+		$body = $xml->sub('body');
+		
+		if ($from === null || $body === null)
+			return; // fixme
+					
+		$data = $body->data;
+		
+		$payload['from'] = $from;
+		$payload['body'] = $data;
 		$payload['xml'] = $xml;
-		$this->log->log("Message: {$xml->sub('body')->data}", XMPPHP_Log::LEVEL_DEBUG);
+		$this->log->log("Message: {$data}", XMPPHP_Log::LEVEL_DEBUG);
 		$this->event('message', $payload);
 	}
 

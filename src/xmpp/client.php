@@ -10,8 +10,7 @@ use \XMPPHP_XMLStream;
 use \XMPPHP_Exception;
 
 require_once __DIR__ . '/XMPPHP/XMPP.php';
-
-require_once 'message.php';
+require_once 'command.php';
 
 class Client
 {
@@ -30,6 +29,9 @@ class Client
   
   // event-handler
   protected $events = [ 'xmpphp' => [], 'custom' => [] ];
+  
+  // auto-handled messagetypes
+  protected $handle = [];
   
   // bot-nickname
   protected $nick;
@@ -75,9 +77,6 @@ class Client
       $info['loglevel']
     );
     
-    // always use ssl
-    // $this->xmpp->useSSL(true);
-    
     // setup trigger
     if (isset($info['trigger']))
       if (!is_array($trg = $info['trigger']))
@@ -106,6 +105,12 @@ class Client
       // connection error
       return false;
     }
+  }
+  
+  public function handle(array $trigger)
+  {
+    $this->handle = $trigger;
+    return $this;
   }
   
   /**
@@ -277,14 +282,17 @@ class Client
     if ($len) $body = trim(substr($body, $len));
     
     // construct message and load handler
-    $info = new Message($this, [
+    $cmd = new Command($this, [
       'body' => $body, 
       'from' => $args['from'],
       'type' => $args['type']
     ]);
     
+    if (in_array($suf, $this->handle) && !empty($cmd->name))
+      $cmd->execute();
+    
     // fire custom event
-    $this->fire('trigger:' . $suf, $info, $this);
+    $this->fire('trigger:' . $suf, $cmd, $this);
   }
   
   /**

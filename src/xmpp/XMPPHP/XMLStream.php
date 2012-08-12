@@ -400,7 +400,9 @@ class XMPPHP_XMLStream {
 				if ($this->reconnect) {
 					$this->doReconnect();
 				} else {
-					fclose($this->socket);
+					if ($this->socket !== null)
+						fclose($this->socket);
+					
 					$this->socket = NULL;
 					return false;
 				}

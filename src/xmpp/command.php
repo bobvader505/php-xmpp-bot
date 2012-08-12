@@ -4,13 +4,13 @@ namespace xbot\xmpp;
 
 use xbot\xmpp\Client;
 
-class Message 
+class Command 
 {
   // basic informations
   public $from, $body, $type, $room = null;
   
   // trigger and parsed arguments
-  public $exec, $args = [];
+  public $name, $args = [];
   
   protected $xbot;
   
@@ -43,9 +43,8 @@ class Message
    */
   protected function parse()
   {
-    list ($this->exec, $rest) = explode(' ', $this->body . ' ', 2);
-    
-    $this->exec = basename($this->exec); // because fuck you, thats why.
+    list ($this->name, $rest) = explode(' ', $this->body . ' ', 2);
+    $this->name = basename($this->name); // because fuck you, thats why.
     
     if (($len = strlen($rest = trim($rest))) === 0)
       return;
@@ -123,8 +122,6 @@ class Message
   {
     $to = $this->room ?: $this->from;
     
-    print "sending $text to $to\n";
-    
     // forward to xbot
     $this->xbot->send($this->room ?: $this->from, $text, $this->type);
     return $this;
@@ -137,11 +134,12 @@ class Message
    */
   public function execute()
   {
-    $exec = $this->exec;
+    $exec = $this->name;
     $exec = str_replace('-', '_', $exec);
     $exec = __DIR__ . '/../plugins/' . $exec . '.php';
     
     if (!file_exists($exec)) return false;
+    print "executing $exec\n";
     
     $args = base64_encode(json_encode($this->args));
     $resp = `php -q -f $exec -- "$args"`;
